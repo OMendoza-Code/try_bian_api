@@ -26,16 +26,3 @@ output "endpoints" {
   }
 }
 
-# --------------------------------------------------------------------
-# Outputs de Redshift
-# --------------------------------------------------------------------
-output "redshift_endpoint" {
-  description = "Endpoint de Redshift Serverless"
-  value       = aws_redshiftserverless_workgroup.party_workgroup.endpoint[0].address
-}
-
-output "redshift_password_secret" {
-  description = "ARN del secreto con la contraseña de Redshift"
-  value       = aws_redshiftserverless_namespace.party_namespace.admin_password_secret_arn
-}
-

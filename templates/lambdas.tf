@@ -21,6 +21,57 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_s3_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+# Política personalizada para Glue
+resource "aws_iam_role_policy" "lambda_glue_policy" {
+  name = "lambda-glue-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "VisualEditor0"
+      Effect = "Allow"
+      Action = [
+        "glue:GetDatabase",
+        "glue:GetTables",
+        "glue:GetDatabases",
+        "glue:GetTable"
+      ]
+      Resource = [
+        "arn:aws:glue:*:244190103141:table/*/*",
+        "arn:aws:glue:*:244190103141:database/*",
+        "arn:aws:glue:*:244190103141:catalog/*",
+        "arn:aws:glue:*:244190103141:catalog"
+      ]
+    }]
+  })
+}
+
+# Política personalizada para KMS
+resource "aws_iam_role_policy" "lambda_kms_policy" {
+  name = "lambda-kms-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "VisualEditor0"
+      Effect = "Allow"
+      Action = [
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:DescribeKey"
+      ]
+      Resource = "arn:aws:kms:*:244190103141:key/*"
+    }]
+  })
+}
+
 # Política para acceso a Redshift Data API
 resource "aws_iam_role_policy" "lambda_redshift_policy" {
   name = "lambda-redshift-data-api-policy"
@@ -81,13 +132,17 @@ resource "aws_lambda_function" "lambda" {
 
   function_name = each.key
   role          = aws_iam_role.lambda_role.arn
-  handler       = "lambda_function.handler"
+  handler       = "lambda_function.lambda_handler"
   runtime       = var.lambda_runtime
   filename      = data.archive_file.dummy_zip.output_path
   
   environment {
     variables = {
-      RedshiftDbRoles = var.project_name
+      EXTERNAL_DATABASE   = var.glue_catalog_database
+      REDSHIFT_DATABASE   = var.redshift_db_name
+      REDSHIFT_WORKGROUP  = var.redshift_workgroup_name
+      SCHEMA_NAME         = var.redshift_schema_name
+      TABLE_NAME          = ""
     }
   }
   
