@@ -80,6 +80,7 @@ resource "aws_api_gateway_method" "get" {
   resource_id   = each.key == "cr_retrieve" ? aws_api_gateway_resource.endpoint[each.key].id : aws_api_gateway_resource.final_retrieve[each.key].id
   http_method   = "GET"
   authorization = "NONE"
+  api_key_required = true
 }
 
 # Integración Lambda Proxy
@@ -120,4 +121,36 @@ resource "aws_api_gateway_stage" "stage" {
   deployment_id = aws_api_gateway_deployment.deploy.id
   rest_api_id   = aws_api_gateway_rest_api.party_api.id
   stage_name    = var.environment
+}
+
+# --------------------------------------------------------------------
+# API Key y Usage Plan
+# --------------------------------------------------------------------
+resource "aws_api_gateway_api_key" "api_key" {
+  name = "${var.project_name}-api-key"
+}
+
+resource "aws_api_gateway_usage_plan" "usage_plan" {
+  name = "${var.project_name}-usage-plan"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.party_api.id
+    stage  = aws_api_gateway_stage.stage.stage_name
+  }
+
+  quota_settings {
+    limit  = 100
+    period = "DAY"
+  }
+
+  throttle_settings {
+    rate_limit  = 10
+    burst_limit = 20
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "usage_plan_key" {
+  key_id        = aws_api_gateway_api_key.api_key.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.usage_plan.id
 }

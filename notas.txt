@@ -1,0 +1,9 @@
+
+-- Se otorga permiso al rol de la lambda de consultar el catalogo de Glue
+GRANT USAGE ON DATABASE awsdatacatalog to "IAMR:api-bian-lambda-role"
+
+-- CURL para llamar al api
+curl -X GET \
+  "https://k0o97dh10b.execute-api.us-east-1.amazonaws.com/dev/PartyReferenceDataDirectory/1005426368/Retrieve" \
+  -H "x-api-key: nLwer7K6LC4lkWAeOKAA6586ceymss56tN3TDQyj" \
+  -H "Content-Type: application/json"

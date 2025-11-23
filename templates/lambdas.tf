@@ -134,6 +134,7 @@ resource "aws_lambda_function" "lambda" {
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_function.lambda_handler"
   runtime       = var.lambda_runtime
+  timeout       = 10
   filename      = data.archive_file.dummy_zip.output_path
   
   environment {
