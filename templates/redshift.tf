@@ -128,7 +128,10 @@ resource "aws_redshiftdata_statement" "party_view" {
     GROUP BY party_type;
   SQL
   
-  depends_on = [aws_redshiftdata_statement.grant_template_permissions]
+  depends_on = [
+    aws_redshiftdata_statement.party_external_table,
+    aws_redshiftdata_statement.grant_lambda_permissions
+  ]
 }
 
 
@@ -136,16 +139,25 @@ resource "aws_redshiftdata_statement" "party_view" {
 resource "aws_redshiftdata_statement" "grant_lambda_permissions" {
   workgroup_name = aws_redshiftserverless_workgroup.party_workgroup.workgroup_name
   database       = var.redshift_db_name
-  sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAM:${aws_iam_role.lambda_role.arn}\";"
+  sql            = "GRANT ALL ON SCHEMA s3_data TO iam_role '${var.project_name}';"
   
-  depends_on = [aws_redshiftdata_statement.spectrum_schema]
+  depends_on = [aws_redshiftdata_statement.spectrum_schema,
+              aws_iam_role.lambda_role
+  ]
+
 }
 
-# Permisos para el usuario que despliega el terraform
+locals {
+  redshift_principal = "IAM:${data.aws_caller_identity.current.user_id}"
+}
+
 resource "aws_redshiftdata_statement" "grant_template_permissions" {
   workgroup_name = aws_redshiftserverless_workgroup.party_workgroup.workgroup_name
   database       = var.redshift_db_name
-  sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAM:usrDeveloper\";"
-  
-  depends_on = [aws_redshiftdata_statement.spectrum_schema]
+
+  sql = "GRANT ALL ON SCHEMA s3_data TO \"${local.redshift_principal}\";"
+
+  depends_on = [
+    aws_redshiftdata_statement.spectrum_schema
+  ]
 }

@@ -85,6 +85,12 @@ resource "aws_lambda_function" "lambda" {
   runtime       = var.lambda_runtime
   filename      = data.archive_file.dummy_zip.output_path
   
+  environment {
+    variables = {
+      RedshiftDbRoles = var.project_name
+    }
+  }
+  
   lifecycle {
     ignore_changes = [filename, source_code_hash]
   }
