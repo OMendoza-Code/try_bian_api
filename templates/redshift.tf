@@ -138,7 +138,7 @@ resource "aws_redshiftdata_statement" "grant_lambda_permissions" {
   database       = var.redshift_db_name
   sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAM:${aws_iam_role.lambda_role.arn}\";"
   
-  depends_on = [aws_redshiftdata_statement.create_lambda_user]
+  depends_on = [aws_redshiftdata_statement.spectrum_schema]
 }
 
 # Permisos para el usuario que despliega el terraform
@@ -147,5 +147,5 @@ resource "aws_redshiftdata_statement" "grant_template_permissions" {
   database       = var.redshift_db_name
   sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAM:usrDeveloper"
   
-  depends_on = [aws_redshiftdata_statement.create_lambda_user]
+  depends_on = [aws_redshiftdata_statement.spectrum_schema]
 }
