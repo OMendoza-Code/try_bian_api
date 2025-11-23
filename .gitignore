@@ -1,1 +1,13 @@
-templates/terraform/
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/*.tfvars
+**/dummy.zip
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -128,24 +128,23 @@ resource "aws_redshiftdata_statement" "party_view" {
     GROUP BY party_type;
   SQL
   
-  depends_on = [aws_redshiftdata_statement.grant_template_permissions]
+  depends_on = [aws_redshiftdata_statement.party_external_table]
 }
 
+# Crear usuario IAM en Redshift para Lambda
+resource "aws_redshiftdata_statement" "create_lambda_user" {
+  workgroup_name = aws_redshiftserverless_workgroup.party_workgroup.workgroup_name
+  database       = var.redshift_db_name
+  sql            = "CREATE USER \"IAMR:${aws_iam_role.lambda_role.arn}\" WITH PASSWORD DISABLE;"
+  
+  depends_on = [aws_redshiftdata_statement.spectrum_schema]
+}
 
 # Permisos para el rol de Lambda en el schema
 resource "aws_redshiftdata_statement" "grant_lambda_permissions" {
   workgroup_name = aws_redshiftserverless_workgroup.party_workgroup.workgroup_name
   database       = var.redshift_db_name
-  sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAM:${aws_iam_role.lambda_role.arn}\";"
+  sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAMR:${aws_iam_role.lambda_role.arn}\";"
   
-  depends_on = [aws_redshiftdata_statement.spectrum_schema]
-}
-
-# Permisos para el usuario que despliega el terraform
-resource "aws_redshiftdata_statement" "grant_template_permissions" {
-  workgroup_name = aws_redshiftserverless_workgroup.party_workgroup.workgroup_name
-  database       = var.redshift_db_name
-  sql            = "GRANT ALL ON SCHEMA s3_data TO \"IAM:usrDeveloper"
-  
-  depends_on = [aws_redshiftdata_statement.spectrum_schema]
+  depends_on = [aws_redshiftdata_statement.create_lambda_user]
 }
