@@ -2,6 +2,14 @@
 -- Se otorga permiso al rol de la lambda de consultar el catalogo de Glue
 GRANT USAGE ON DATABASE awsdatacatalog to "IAMR:api-bian-lambda-role"
 
+-- Se otorga acceso al rol de la lambda a los objetos internos, 
+* Se agrega la tag Key:RedshiftDbRoles Value: nombre_del_rol_de_base_de_datos 
+aws iam tag-role --role-name RedshiftDbRoles --tags Key=<clave>,Value=nombre_del_rol_de_base_de_datos
+
+create role data_api_role;
+grant all on schema public to ROLE nombre_del_rol_de_base_de_datos;
+grant all on all tables in schema public to ROLE nombre_del_rol_de_base_de_datos;
+
 -- CURL para llamar al api
 curl -X GET \
   "https://k0o97dh10b.execute-api.us-east-1.amazonaws.com/dev/PartyReferenceDataDirectory/1005426368/Retrieve" \
